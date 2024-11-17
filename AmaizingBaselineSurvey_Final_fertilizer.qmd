@@ -1,0 +1,275 @@
+---
+title: "Amaizing  Baseline Survey_Final-fertilizer"
+author: "Njambi"
+format: html
+editor: visual
+---
+
+## 
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Clear the environment
+
+```{r}
+
+rm(list = ls())
+
+```
+
+## Loading necessary libraries
+
+```{r, include=FALSE}
+
+library(tidyverse) # includes the dplyr, ggplot2, tidyr, readr, stringr, forcats, tibble packages
+library(readxl)
+library(Hmisc)
+library(labelled)
+library(magrittr)
+library(datawizard)
+library(gtsummary)
+library(gt)
+library(kableExtra)
+library(flextable)
+library(splitstackshape)
+library(lubridate)
+library(foreign)
+library(haven)
+
+#library(ggplot2)
+#library(tidyr)
+#library(tibble)
+#library(dplyr)
+#library(stringr)
+
+```
+
+## Set the working directory
+
+```{r}
+# Set working directory (Not necessary since the current wd is the correct wd)
+
+setwd("C:\\Users\\awanjau\\OneDrive - CGIAR\\Alliance\\Alliance_2024\\AMAZING\\AmazingBaselineDataCleaning\\Amaizing  Baseline Survey_Final-fertilizer")
+      
+```
+
+## Loading data
+
+```{r}
+# Read a csv file
+
+amaizing_fertilizer_path <- "C:\\Users\\awanjau\\OneDrive - CGIAR\\Alliance\\Alliance_2024\\AMAZING\\aMaizingBaseline_Files\\Amaizing  Baseline Survey_Final-fertilizer.csv"
+
+amaizing_fertilizer <- read_csv(amaizing_fertilizer_path)
+
+dim(amaizing_fertilizer) # 
+
+```
+
+```{r}
+
+names(amaizing_fertilizer)
+```
+
+```{r}
+unique(amaizing_fertilizer$fertindex2)
+
+
+```
+
+```{r}
+
+fertilizer_levels <- c(
+  "CAN", "DAP", "NPK", "Rock Phosphate", "Urea", "Branded fertilizer blends (Yara)", "Lime", "Foliar Fertilizer", "None of the above", "Other Specify"
+                         )  
+
+amaizing_fertilizer <- amaizing_fertilizer %>%
+  mutate(
+    fertindex2 = factor(
+      fertindex2, 
+      levels = c(1:3, 5:9, -666, -222), 
+      labels = fertilizer_levels
+    )
+  
+  ) 
+
+```
+
+```{r}
+unique(amaizing_fertilizer$fertindex2)
+
+
+```
+
+```{r}
+
+unique(amaizing_fertilizer$fertname)
+```
+
+The column `fertname` included text entry from "other specify", which has not been cleaned and harmonized.
+
+```{r}
+
+
+amaizing_fertilizer <- amaizing_fertilizer %>%
+  mutate(
+    fertname = factor(fertname)
+  )
+```
+
+```{r}
+unique(amaizing_fertilizer$fertname)
+
+```
+
+```{r}
+unique(amaizing_fertilizer$f8)
+
+```
+
+```{r}
+unique(amaizing_fertilizer$f9)
+
+```
+
+```{r}
+
+unitfert_levels <- c(
+"50kg Bag", "25kg Bag", "10kg Bag", "Kg", "Liter", "Gorogoro (2kgs)", "Debe (16Kgs)", "Wheelbarrow", "Cart", "Grams", "Other, Specify" 
+                         )  
+
+amaizing_fertilizer <- amaizing_fertilizer %>%
+  mutate(
+    f9 = factor(
+      f9, 
+      levels = c(1:9, 12, -222), 
+      labels = unitfert_levels
+    )
+  
+  ) 
+
+```
+
+```{r}
+unique(amaizing_fertilizer$f9)
+
+```
+
+```{r}
+names(amaizing_fertilizer)
+```
+
+```{r}
+unique(amaizing_fertilizer$f9_sp)
+
+# Drop this column; it is empty
+```
+
+```{r}
+
+amaizing_fertilizer <- amaizing_fertilizer %>%
+  select(-f9_sp)
+
+names(amaizing_fertilizer)
+```
+
+```{r}
+
+column_labels <- c(
+
+fertindex1 = "Fertilizer repeat iteration/index",
+fertindex2 = "Fertilizer level/category selected",
+fertname = "Fertilizer label/name corresponding to fertindex2",
+f8 = "Quantity of fertname used in plotid",
+f9 = "Fertilizer Unit  for fertname used  in plotid",
+#f9_sp = "Please Specify",
+PARENT_KEY = "Parent key",
+KEY = "Key",
+`SET-OF-fertilizer` = "Fertilizer repeat group ID"
+)
+
+```
+
+```{r}
+
+# Rename columns with characters not supported by stata
+
+amaizing_fertilizer <- amaizing_fertilizer %>%
+  
+  rename(SET_OF_fertilizer = `SET-OF-fertilizer`
+    
+         )
+
+```
+
+```{r}
+# Set variable/column labels
+ 
+amaizing_fertilizer <- amaizing_fertilizer %>%
+  
+  set_variable_labels(.labels = column_labels)   # Requires package labelled
+```
+
+Using the function View() to open the new data in a spreadsheet reveals the column names and labels.
+
+```{r}
+
+# View(amaizing_fertilizer)
+
+```
+
+## Generate a data dictionary
+
+```{r}
+# Data dictionary
+
+amaizing_fertilizer_dict <- look_for(amaizing_fertilizer, labels = TRUE, values = TRUE) %>%
+  dplyr::select(-c(missing, value_labels))
+
+  gt(amaizing_fertilizer_dict)
+
+```
+
+## Export data dictionary to CSV
+
+```{r}
+
+readr::write_csv(amaizing_fertilizer_dict, "amaizing_fertilizer_dict.csv")
+
+```
+
+## Export data to CSV
+
+```{r}
+
+readr::write_csv(amaizing_fertilizer, "amaizing_fertilizer.csv")
+
+```
+
+## Save as R data
+
+```{r}
+
+save(amaizing_fertilizer, file = "amaizing_fertilizer.RData")
+
+#View(amaizing_fertilizer)
+```
+
+## Export data to SPSS
+
+```{r}
+
+write.foreign(amaizing_fertilizer, "amaizing_fertilizer.sav", "amaizing_fertilizer", package = "SPSS")
+
+```
+
+## Export data to STATA
+
+```{r}
+
+write_dta(amaizing_fertilizer, "amaizing_fertilizer.dta")
+
+```
